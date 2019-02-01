@@ -70,8 +70,8 @@ def generateMikrotikScript(dt):
     string.append('/routing bgp network add comment={comment} network={localnet}'.format(comment=dt["comment"], localnet=dt['local-net']))
     string.append('/routing bgp peer add comment={comment} hold-time=30s instance={name} remote-address={ipsecdst} remote-as={remoteas}'.format(comment=dt["comment"], name=dt['name'],
                     ipsecdst=dt["ipsec-dst"], remoteas=dt["remote-as"]))
-    if(dt['config'] and dt['config'] != ''):
-        with open(dt['config'] + '_' + dt['name'] + '.rsc', 'w') as f:
+    if(dt['output'] and dt['output'] != ''):
+        with open(dt['output'] + '_' + dt['name'] + '.rsc', 'w') as f:
             for line in string:
                 f.write(line + '\n')
     else:
