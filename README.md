@@ -6,6 +6,8 @@ This script parses AWS VPN config for mikrotik and creates mikrotik configuratio
 
 If you set parameter "output", then script generate files for each tunnel. Default output to std.
 
+Script works on RouterOS 6.43.2
+
 > You need set "Propogate routes" in AWS console
 
 ## Requrements
