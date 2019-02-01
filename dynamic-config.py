@@ -1,7 +1,9 @@
 #!/bin/python3
+
 import json
-def readDataFromConfig():
-    with open("vpn-config.txt") as f:
+import argparse
+def readDataFromConfig(config_path):
+    with open(config_path) as f:
         data = f.readlines()
 
     for i in range(0, len(data)):
@@ -9,7 +11,6 @@ def readDataFromConfig():
             strTun1 = i
         if "! IPSec Tunnel #2" in data[i]:
             strTun2 = i
-    #print(strTun1, strTun2)
     return parseTunnel(data[strTun1:strTun2]), parseTunnel(data[strTun2:])
 
 def parseTunnel(data):
@@ -69,24 +70,57 @@ def generateMikrotikScript(dt):
     string.append('/routing bgp network add comment={comment} network={localnet}'.format(comment=dt["comment"], localnet=dt['local-net']))
     string.append('/routing bgp peer add comment={comment} hold-time=30s instance={name} remote-address={ipsecdst} remote-as={remoteas}'.format(comment=dt["comment"], name=dt['name'],
                     ipsecdst=dt["ipsec-dst"], remoteas=dt["remote-as"]))
+    if(dt['config'] and dt['config'] != ''):
+        with open(dt['config'] + '_' + dt['name'] + '.rsc', 'w') as f:
+            for line in string:
+                f.write(line + '\n')
+    else:
+        for line in string:
+            print(line)
 
-
-
-    for line in string:
-        print(line)
-    pass
-if __name__ == "__main__":
+def printHelp():
+    print("This is script for converting aws config to mikrotik script")
+def setPermanentInfo():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', action='store', type=str, help='path to config file', required=True)
+    parser.add_argument('--wan-interface', action='store', type=str, help='wan interface for this connection with static ip (default: sfp1)', default='sfp1')
+    parser.add_argument('--lan-interface', action='store', type=str, help='bridge interface for firewall rules (default: br0)', default='br0')
+    parser.add_argument('--local-net', action='store', type=str, help='local network (default: 192.168.0.0/24)', default='192.168.0.0/24')
+    parser.add_argument('--remote-net', action='store', type=str, help='aws inner network (default: 10.0.0.0/24)', default='10.0.0.0/24')
+    parser.add_argument('--comment', action='store', type=str, help='comment for mark changing', default='AWS-VPN')
+    parser.add_argument('--local-as', action='store', type=str, help='local AS for bgp (default: 65000)', default='65000')
+    parser.add_argument('--output', action='store', type=str, help='generate script for each tunnel {{ config }}_Tunnel##.rsc (default output: std)')
+    par = parser.parse_args()
+    if(par.config == ''):
+        print("Choose config file")
+        parser.print_help()
+        exit(1)
     permanentInfo = {
+        "config": par.config,
+        "wan-interface": par.wan_interface,
+        "local-interface": par.lan_interface,
+        "local-net": par.local_net,
+        "remote-net": par.remote_net,
+        "comment": par.comment,
+        "local-as": par.local_as,
+        "output": par.output
+    }
+    return permanentInfo
+
+
+if __name__ == "__main__":
+    """     permanentInfo = {
         "wan-interface": "sfp1",
         "local-interface": "br0",
         "local-net": "192.168.0.0/16",
         "remote-net": "172.16.46.0/24",
         "comment": "AWS-VPN",
         "local-as": 65000
-    }
-    for tun in readDataFromConfig():
-        test = {}
-        test.update(tun)
-        test.update(permanentInfo)
-        print(json.dumps(test, indent=4))
-        generateMikrotikScript(test)
+    } """
+    permanentInfo = setPermanentInfo()
+    for tun in readDataFromConfig(permanentInfo['config']):
+        configuration = {}
+        configuration.update(tun)
+        configuration.update(permanentInfo)
+        print(json.dumps(configuration, indent=4))
+        generateMikrotikScript(configuration)
