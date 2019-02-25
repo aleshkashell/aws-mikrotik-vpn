@@ -114,5 +114,7 @@ if __name__ == "__main__":
         configuration = {}
         configuration.update(tun)
         configuration.update(permanentInfo)
+        #For unique names in multiply configurations
+        configuration['name'] = '{comment}_{name}'.format(comment=configuration['comment'], name=configuration['name'])
         print(json.dumps(configuration, indent=4))
         generateMikrotikScript(configuration)
