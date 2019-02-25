@@ -109,14 +109,6 @@ def setPermanentInfo():
 
 
 if __name__ == "__main__":
-    """     permanentInfo = {
-        "wan-interface": "sfp1",
-        "local-interface": "br0",
-        "local-net": "192.168.0.0/16",
-        "remote-net": "172.16.46.0/24",
-        "comment": "AWS-VPN",
-        "local-as": 65000
-    } """
     permanentInfo = setPermanentInfo()
     for tun in readDataFromConfig(permanentInfo['config']):
         configuration = {}
